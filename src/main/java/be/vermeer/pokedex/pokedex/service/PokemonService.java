@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,6 +42,7 @@ public class PokemonService {
     }
      */
 
+    @Transactional(readOnly=true)
     public Page<PokemonResponse> search(String name, String type, Pageable pageable) {
         // Chaque filtre absent retourne un critère neutre ; les critères se composent.
         Specification<Pokemon> specification = PokemonSpecifications.nameContains(name)
@@ -50,6 +52,7 @@ public class PokemonService {
         return repository.findAll(specification, pageable).map(PokemonMapper::toResponse);
     }
 
+    @Transactional(readOnly=true)
     public PokemonResponse findById(int id) {
         return PokemonMapper.toResponse(findEntityById(id));
     }
@@ -69,12 +72,14 @@ public class PokemonService {
         return new HashSet<>(types);
     }
 
+    @Transactional()
     public PokemonResponse create(CreatePokemonRequest request) {
         Set<PokemonType> types = getPokemonTypesByIds(request.getTypeIds());
         Pokemon pokemon = new Pokemon(request.getName(), types);
         return PokemonMapper.toResponse(this.repository.save(pokemon));
     }
 
+    @Transactional()
     public PokemonResponse update(int id, UpdatePokemonRequest request) {
         Pokemon pokemon = this.findEntityById(id);
         if(request.getName() != null) pokemon.setName(request.getName());
@@ -87,6 +92,7 @@ public class PokemonService {
         return PokemonMapper.toResponse(this.repository.save(pokemon));
     }
 
+    @Transactional()
     public void delete(int id) {
         Pokemon pokemon = this.findEntityById(id);
         this.repository.delete(pokemon);
